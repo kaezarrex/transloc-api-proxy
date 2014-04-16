@@ -1,15 +1,20 @@
 import os
 
-from flask import Flask, Markup, redirect, render_template, request, Response
+from flask import Flask, request, Response
 import requests
 
 
-app = Flask(__name__)
 API_URL = os.getenv('API_URL')
 API_KEY = os.getenv('API_KEY')
+app = Flask(__name__)
 
 
 def append_args(path, args):
+    '''Format query string (args) and append it to a URL path'''
+
+    if len(request.args) == 0:
+        return path
+
     params = ['%s=%s' % (key, args[key]) for key in args]
     query = '&'.join(params)
     return '%s?%s' % (path, query)
@@ -18,8 +23,7 @@ def append_args(path, args):
 @app.route('/<path:path>')
 def path_handler(path):
 
-    if len(request.args) > 0:
-        path = append_args(path, request.args)
+    path = append_args(path, request.args)
 
     headers = {
         'X-Mashape-Authorization': API_KEY
