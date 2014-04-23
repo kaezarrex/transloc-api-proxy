@@ -31,6 +31,8 @@ def path_handler(path):
 
     r = requests.get(API_URL + path, headers=headers)
 
+    print r.status_code, API_URL + path
+
     return Response(r.text, status=r.status_code,
                     content_type=r.headers['content-type'])
 
