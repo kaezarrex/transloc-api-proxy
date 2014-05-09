@@ -1,12 +1,15 @@
 import os
 
 from flask import Flask, request, Response
+from flask.ext.cache import Cache
 import requests
 
 
 API_URL = os.getenv('API_URL')
 API_KEY = os.getenv('API_KEY')
+
 app = Flask(__name__)
+cache = Cache(app,config={'CACHE_TYPE': 'simple'})
 
 
 def append_args(path, args):
@@ -20,16 +23,23 @@ def append_args(path, args):
     return '%s?%s' % (path, query)
 
 
-@app.route('/<path:path>')
-def path_handler(path):
+@cache.memoize(1)
+def fetch(path, args={}):
+    '''Fetch a url with optional query parameters and return a requests
+    response'''
 
-    path = append_args(path, request.args)
-
+    path = append_args(path, args)
     headers = {
         'X-Mashape-Authorization': API_KEY
         }
 
-    r = requests.get(API_URL + path, headers=headers)
+    return requests.get(API_URL + path, headers=headers)
+
+
+@app.route('/<path:path>')
+def path_handler(path):
+
+    r = fetch(path, request.args)
 
     print r.status_code, API_URL + path
 
